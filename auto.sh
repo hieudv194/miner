@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Danh sách vùng AWS cần thay đổi instance
-REGIONS=("us-east-1" "us-west-2" "eu-central-1")
+REGIONS=("us-east-1" "us-west-2" "us-east-2")
 
 # Hàm cập nhật instance type mới
 get_new_instance_type() {
