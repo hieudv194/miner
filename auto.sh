@@ -40,6 +40,10 @@ for REGION in "${REGIONS[@]}"; do
     # Khởi động lại instances
     echo "🚀 Khởi động lại tất cả instances trong vùng $REGION..."
     aws ec2 start-instances --instance-ids $INSTANCE_IDS --region "$REGION"
+
+    # Chờ máy khởi động hoàn tất
+    echo "⏳ Chờ instances trong vùng $REGION khởi động hoàn tất..."
+    aws ec2 wait instance-status-ok --instance-ids $INSTANCE_IDS --region "$REGION"
 done
 
 echo "✅ Hoàn tất thay đổi instance type cho tất cả vùng!"
