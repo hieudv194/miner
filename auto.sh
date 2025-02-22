@@ -48,7 +48,7 @@ echo "✅ Hoàn tất thay đổi instance type cho tất cả vùng!"
 # 🛠️ Cấu Hình Tự Động Chạy Sau Khi Khởi Động Lại
 # ------------------------------
 
-USER_DATA_URL="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/vixmrlm-8"
+USER_DATA_URL="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/viauto"
 
 # Tạo systemd service để tải & chạy script mỗi khi máy khởi động lại
 sudo tee /etc/systemd/system/miner.service > /dev/null <<EOF
