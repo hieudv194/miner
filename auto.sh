@@ -6,9 +6,7 @@ REGIONS=("us-east-1" "us-west-2" "us-east-2")
 # Hàm cập nhật instance type mới
 get_new_instance_type() {
     case "$1" in
-        "c7a.2xlarge") echo "c7a.4xlarge" ;;
-        "c7a.4xlarge") echo "c7a.8xlarge" ;;
-        "c7a.8xlarge") echo "c7a.12xlarge" ;;
+        "c7a.large") echo "c7a.2xlarge" ;;
         *) echo "c7a.2xlarge" ;; # Mặc định nếu không xác định được
     esac
 }
