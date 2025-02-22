@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Kiểm tra quyền root
+# Kiểm tra nếu không chạy với quyền root thì tự động chuyển sang root
 if [[ $EUID -ne 0 ]]; then
-   echo "⚠️ Vui lòng chạy script với quyền root!" 
-   exit 1
+    echo "⚠️ Script chưa chạy với quyền root. Chuyển sang root..."
+    exec sudo bash "$0" "$@"
 fi
 
 # Danh sách vùng AWS cần thay đổi instance
