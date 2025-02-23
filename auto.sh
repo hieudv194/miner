@@ -7,7 +7,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # URL chứa User Data trên GitHub
-USER_DATA_URL="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/vixmrlm-64"
+USER_DATA_URL="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/viauto"
 
 # File tạm để lưu User Data
 USER_DATA_FILE="/tmp/user_data.sh"
