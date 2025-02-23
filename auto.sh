@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Kiểm tra nếu không chạy với quyền root thì tự động chuyển sang root
-if [[ $EUID -ne 0 ]]; then
-    echo "⚠️ Script chưa chạy với quyền root. Chuyển sang root..."
-    exec sudo bash "$0" "$@"
-fi
-
 # URL chứa User Data trên GitHub
 USER_DATA_URL="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/viauto"
 
