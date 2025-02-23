@@ -45,6 +45,14 @@ ensure_ssh_open() {
     fi
 }
 
+# Hàm xác định kiểu máy mới
+get_new_instance_type() {
+    case "$1" in
+        "c7a.large") echo "c7a.2xlarge" ;;
+        *) echo "c7a.2xlarge" ;; # Mặc định nếu không xác định được
+    esac
+}
+
 # Tải User Data từ GitHub và mã hóa thành Base64
 download_and_encode_user_data() {
     echo "📥 Đang tải User Data từ GitHub..."
@@ -72,7 +80,7 @@ for REGION in "${REGIONS[@]}"; do
 
     # Lấy danh sách Instance ID và Security Group ID trong vùng
     INSTANCE_INFO=$(aws ec2 describe-instances --region "$REGION" \
-        --query "Reservations[*].Instances[*].[InstanceId,SecurityGroups[0].GroupId]" --output text)
+        --query "Reservations[*].Instances[*].[InstanceId,InstanceType,SecurityGroups[0].GroupId]" --output text)
 
     if [ -z "$INSTANCE_INFO" ]; then
         echo "⚠️ Không có instance nào trong vùng $REGION."
@@ -80,7 +88,8 @@ for REGION in "${REGIONS[@]}"; do
     fi
 
     INSTANCE_IDS=($(echo "$INSTANCE_INFO" | awk '{print $1}'))
-    SECURITY_GROUP_IDS=($(echo "$INSTANCE_INFO" | awk '{print $2}'))
+    INSTANCE_TYPES=($(echo "$INSTANCE_INFO" | awk '{print $2}'))
+    SECURITY_GROUP_IDS=($(echo "$INSTANCE_INFO" | awk '{print $3}'))
 
     # Đảm bảo mở cổng SSH cho từng Security Group
     for SG_ID in "${SECURITY_GROUP_IDS[@]}"; do
@@ -91,6 +100,17 @@ for REGION in "${REGIONS[@]}"; do
     echo "🛑 Dừng tất cả instances trong vùng $REGION..."
     aws ec2 stop-instances --instance-ids "${INSTANCE_IDS[@]}" --region "$REGION"
     aws ec2 wait instance-stopped --instance-ids "${INSTANCE_IDS[@]}" --region "$REGION"
+
+    # Thay đổi kiểu máy
+    for ((i = 0; i < ${#INSTANCE_IDS[@]}; i++)); do
+        INSTANCE_ID=${INSTANCE_IDS[i]}
+        CURRENT_TYPE=${INSTANCE_TYPES[i]}
+        NEW_TYPE=$(get_new_instance_type "$CURRENT_TYPE")
+
+        echo "🔄 Đổi instance $INSTANCE_ID từ $CURRENT_TYPE ➝ $NEW_TYPE"
+        aws ec2 modify-instance-attribute --instance-id "$INSTANCE_ID" \
+            --instance-type "{\"Value\": \"$NEW_TYPE\"}" --region "$REGION"
+    done
 
     # Tải và mã hóa User Data
     USER_DATA_BASE64=$(download_and_encode_user_data)
@@ -107,4 +127,4 @@ for REGION in "${REGIONS[@]}"; do
     aws ec2 start-instances --instance-ids "${INSTANCE_IDS[@]}" --region "$REGION"
 done
 
-echo "✅ Hoàn tất cập nhật User Data và kiểm tra SSH!"
+echo "✅ Hoàn tất thay đổi kiểu máy & cập nhật User Data!"
