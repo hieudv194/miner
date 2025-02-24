@@ -118,56 +118,52 @@ for region in "${!region_image_map[@]}"; do
     echo "On-Demand Instance $instance_id created in $region using Key Pair $key_name and Security Group $sg_name"
 
     
- # Gửi yêu cầu Spot Instances
+ # Function: Khởi tạo Spot Instance
+start_spot_instance() {
+
+    # Lấy Subnet ID khả dụng
+    SUBNET_ID=$(aws ec2 describe-subnets --region "$REGION" --query "Subnets[0].SubnetId" --output text)
+    if [ -z "$SUBNET_ID" ]; then
+        echo "❌ No available Subnet found in $REGION. Skipping..."
+        continue
+    fi
+
+    echo "🟢 Using Subnet ID: $SUBNET_ID"
+
+    # Gửi yêu cầu Spot Instances
     SPOT_REQUEST_ID=$(aws ec2 request-spot-instances \
-        --spot-price "$SPOT_PRICE" \
-        --instance-count "$INSTANCE_COUNT" \
-        --type "one-time" \
-        --launch-specification "{
-            \"ImageId\": \"$image_id\",
-            \"InstanceType\": \"$INSTANCE_TYPE\",
-            \"KeyName\": \"$key_name\",
-            \"SecurityGroupIds\": [\"$sg_id\"],
-            \"SubnetId\": \"$subnet_id\",
-            \"UserData\": \"$user_data_base64\"
-        }" \
-        --region "$region" \
-        --query "SpotInstanceRequests[*].SpotInstanceRequestId" \
-        --output text)
+    --spot-price "$SPOT_PRICE" \
+    --instance-count "$INSTANCE_COUNT" \
+    --type "one-time" \
+    --launch-specification "{
+        \"ImageId\": \"$image_id\",
+        \"InstanceType\": \"$INSTANCE_TYPE\",
+        \"KeyName\": \"$key_name\",
+        \"SecurityGroupIds\": [\"$sg_id\"],
+        \"SubnetId\": \"$SUBNET_ID\",
+        \"UserData\": \"$user_data_base64\"
+    }" \
+    --region "$REGION" \
+    --query "SpotInstanceRequests[*].SpotInstanceRequestId" \
+    --output text)
+
 
     if [ -n "$SPOT_REQUEST_ID" ]; then
         echo "✅ Spot Request Created: $SPOT_REQUEST_ID"
-        echo "$region: $SPOT_REQUEST_ID" >> spot_requests.log
     else
-        echo "❌ Failed to create Spot Request in $region" >&2
-    fi
-
-done
-echo "🚀 Hoàn tất gửi Spot Requests!"
-
-# Function: Kiểm tra và khởi động lại Spot Instances
-monitor_and_restart() {
-    region=$1
-    echo "🔍 Kiểm tra Spot Instances ở $region..."
-
-    # Lấy danh sách Spot Instance Requests đang chạy
-    RUNNING_INSTANCES=$(aws ec2 describe-spot-instance-requests \
-        --region "$region" \
-        --query "SpotInstanceRequests[?State=='active'].InstanceId" \
-        --output text)
-
-    # Nếu không có Instance nào đang chạy, tạo lại Spot Request
-    if [ -z "$RUNNING_INSTANCES" ]; then
-        echo "⚠️ Không có Spot Instance nào chạy ở $region, đang khởi động lại..."
-        SPOT_REQUEST_ID "$region"
-    else
-        echo "✅ Spot Instances đang chạy bình thường ở $region."
+        echo "❌ Không thể tạo Spot Request ở $REGION" >&2
     fi
 }
+
+# Chạy lần đầu để khởi tạo Spot Instances
+for REGION in "${!region_image_map[@]}"; do
+    start_spot_instance "$REGION"
+done
+
 # Giám sát liên tục và tự động khởi động lại nếu Spot Instance bị đóng
 while true; do
-    for region in "${!region_image_map[@]}"; do
-        monitor_and_restart "$region"
+    for REGION in "${!region_image_map[@]}"; do
+        monitor_and_restart "$REGION"
     done
     sleep 300  # Kiểm tra mỗi 5 phút
 done
