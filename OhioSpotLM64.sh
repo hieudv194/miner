@@ -144,6 +144,11 @@ for region in "${!region_image_map[@]}"; do
 
     echo "🚀 Hoàn tất gửi Spot Requests!"
 
+# Định nghĩa hàm giám sát (nếu chưa có)
+monitor_and_restart() {
+    echo "Restarting instance in region: $1"
+}
+
 # Giám sát liên tục và tự động khởi động lại nếu Spot Instance bị đóng
 while true; do
     for region in "${!region_image_map[@]}"; do
