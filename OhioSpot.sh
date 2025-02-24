@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # List of regions and corresponding AMI IDs
