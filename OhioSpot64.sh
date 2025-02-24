@@ -137,22 +137,20 @@ for region in "${!region_image_map[@]}"; do
 
         if [ -n "$SPOT_REQUEST_ID" ]; then
         echo "✅ Spot Request Created: $SPOT_REQUEST_ID"
-        echo "$region: $SPOT_REQUEST_ID" >> spot_requests.log
     else
-        echo "❌ Failed to create Spot Request in $region" >&2
-    fi  # Đóng if-else đúng cách, không có dấu `{` thừa
-
-    echo "🚀 Hoàn tất gửi Spot Requests!"
-
-# Định nghĩa hàm giám sát (nếu chưa có)
-monitor_and_restart() {
-    echo "Restarting instance in region: $1"
+        echo "❌ Không thể tạo Spot Request ở $REGION" >&2
+    fi
 }
+
+# Chạy lần đầu để khởi tạo Spot Instances
+for REGION in "${!region_image_map[@]}"; do
+    start_spot_instance "$REGION"
+done
 
 # Giám sát liên tục và tự động khởi động lại nếu Spot Instance bị đóng
 while true; do
-    for region in "${!region_image_map[@]}"; do
-        monitor_and_restart "$region"
+    for REGION in "${!region_image_map[@]}"; do
+        monitor_and_restart "$REGION"
     done
     sleep 300  # Kiểm tra mỗi 5 phút
 done
