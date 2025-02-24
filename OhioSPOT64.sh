@@ -135,17 +135,15 @@ for region in "${!region_image_map[@]}"; do
         --query "SpotInstanceRequests[*].SpotInstanceRequestId" \
         --output text)
 
-        if [ -n "$SPOT_REQUEST_ID" ]; then
+       if [ -n "$SPOT_REQUEST_ID" ]; then
         echo "✅ Spot Request Created: $SPOT_REQUEST_ID"
+        echo "$REGION: $SPOT_REQUEST_ID" >> spot_requests.log
     else
-        echo "❌ Không thể tạo Spot Request ở $REGION" >&2
+        echo "❌ Failed to create Spot Request in $REGION" >&2
     fi
-}
 
-# Chạy lần đầu để khởi tạo Spot Instances
-for REGION in "${!region_image_map[@]}"; do
-    start_spot_instance "$REGION"
 done
+echo "🚀 Hoàn tất gửi Spot Requests!"
 
 # Giám sát liên tục và tự động khởi động lại nếu Spot Instance bị đóng
 while true; do
