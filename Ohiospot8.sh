@@ -137,17 +137,30 @@ for region in "${!region_image_map[@]}"; do
 
     if [ -n "$SPOT_REQUEST_ID" ]; then
         echo "✅ Spot Request Created: $SPOT_REQUEST_ID"
-        echo "$region: $SPOT_REQUEST_ID" >> spot_requests.log
+        echo "$REGION: $SPOT_REQUEST_ID" >> spot_requests.log
     else
-        echo "❌ Failed to create Spot Request in $region" >&2
+        echo "❌ Failed to create Spot Request in $REGION" >&2
     fi
-    echo "🚀 Hoàn tất gửi Spot Requests!"
-}
 
+done
+echo "🚀 Hoàn tất gửi Spot Requests!"
+
+# 🛠 **Hàm giám sát & khởi động lại Spot Instance nếu bị đóng**
+monitor_and_restart() {
+    local region="$1"
+    echo "Monitoring Spot Instances in region: $region"
+
+    spot_instances=$(aws ec2 describe-instances --filters "Name=instance-state-name,Values=stopped" --region "$region" --query "Reservations[*].Instances[*].InstanceId" --output text)
+
+    for instance_id in $spot_instances; do
+        echo "Restarting instance: $instance_id"
+        aws ec2 start-instances --instance-ids "$instance_id" --region "$region"
+    done
+}
 # Giám sát liên tục và tự động khởi động lại nếu Spot Instance bị đóng
 while true; do
-    for region in "${!region_image_map[@]}"; do
-        monitor_and_restart "$region"
+    for REGION in "${!region_image_map[@]}"; do
+        monitor_and_restart "$REGION"
     done
     sleep 300  # Kiểm tra mỗi 5 phút
 done
