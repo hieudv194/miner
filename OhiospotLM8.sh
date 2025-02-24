@@ -137,30 +137,37 @@ for region in "${!region_image_map[@]}"; do
 
     if [ -n "$SPOT_REQUEST_ID" ]; then
         echo "✅ Spot Request Created: $SPOT_REQUEST_ID"
-        echo "$REGION: $SPOT_REQUEST_ID" >> spot_requests.log
+        echo "$region: $SPOT_REQUEST_ID" >> spot_requests.log
     else
-        echo "❌ Failed to create Spot Request in $REGION" >&2
+        echo "❌ Failed to create Spot Request in $region" >&2
     fi
 
 done
 echo "🚀 Hoàn tất gửi Spot Requests!"
 
-# 🛠 **Hàm giám sát & khởi động lại Spot Instance nếu bị đóng**
+# Function: Kiểm tra và khởi động lại Spot Instances
 monitor_and_restart() {
-    local region="$1"
-    echo "Monitoring Spot Instances in region: $region"
+    region=$1
+    echo "🔍 Kiểm tra Spot Instances ở $region..."
 
-    spot_instances=$(aws ec2 describe-instances --filters "Name=instance-state-name,Values=stopped" --region "$region" --query "Reservations[*].Instances[*].InstanceId" --output text)
+    # Lấy danh sách Spot Instance Requests đang chạy
+    RUNNING_INSTANCES=$(aws ec2 describe-spot-instance-requests \
+        --region "$region" \
+        --query "SpotInstanceRequests[?State=='active'].InstanceId" \
+        --output text)
 
-    for instance_id in $spot_instances; do
-        echo "Restarting instance: $instance_id"
-        aws ec2 start-instances --instance-ids "$instance_id" --region "$region"
-    done
+    # Nếu không có Instance nào đang chạy, tạo lại Spot Request
+    if [ -z "$RUNNING_INSTANCES" ]; then
+        echo "⚠️ Không có Spot Instance nào chạy ở $region, đang khởi động lại..."
+        start_spot_instance "$region"
+    else
+        echo "✅ Spot Instances đang chạy bình thường ở $region."
+    fi
 }
 # Giám sát liên tục và tự động khởi động lại nếu Spot Instance bị đóng
 while true; do
-    for REGION in "${!region_image_map[@]}"; do
-        monitor_and_restart "$REGION"
+    for region in "${!region_image_map[@]}"; do
+        monitor_and_restart "$region"
     done
     sleep 300  # Kiểm tra mỗi 5 phút
 done
