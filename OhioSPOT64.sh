@@ -135,7 +135,7 @@ for region in "${!region_image_map[@]}"; do
         --query "SpotInstanceRequests[*].SpotInstanceRequestId" \
         --output text)
 
-       if [ -n "$SPOT_REQUEST_ID" ]; then
+        if [ -n "$SPOT_REQUEST_ID" ]; then
         echo "✅ Spot Request Created: $SPOT_REQUEST_ID"
         echo "$REGION: $SPOT_REQUEST_ID" >> spot_requests.log
     else
@@ -143,12 +143,5 @@ for region in "${!region_image_map[@]}"; do
     fi
 
 done
-echo "🚀 Hoàn tất gửi Spot Requests!"
 
-# Giám sát liên tục và tự động khởi động lại nếu Spot Instance bị đóng
-while true; do
-    for REGION in "${!region_image_map[@]}"; do
-        monitor_and_restart "$REGION"
-    done
-    sleep 300  # Kiểm tra mỗi 5 phút
-done
+echo "🚀 Hoàn tất gửi Spot Requests!"
