@@ -142,7 +142,6 @@ for region in "${!region_image_map[@]}"; do
         echo "❌ Failed to create Spot Request in $region" >&2
     fi
     echo "🚀 Hoàn tất gửi Spot Requests!"
-}
 
 # Giám sát liên tục và tự động khởi động lại nếu Spot Instance bị đóng
 while true; do
