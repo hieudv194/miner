@@ -6,7 +6,7 @@ REGIONS=("us-east-1" "us-west-2" "us-east-2")
 # Cấu hình chung
 NEW_QUOTA_VALUE=64   # Giá trị hạn mức mới bạn muốn
 SERVICE_CODE="ec2"   # Mã dịch vụ EC2
-QUOTA_CODE="L-34B43A08" "L-1216C47A"  # Mã hạn mức cho Instances (vCPU)
+QUOTA_CODE=("L-34B43A08" "L-1216C47A")  # Mã hạn mức cho Instances (vCPU)
 
 # Lặp qua từng khu vực và gửi yêu cầu tăng hạn mức
 for REGION in "${REGIONS[@]}"; do
