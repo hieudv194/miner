@@ -159,7 +159,7 @@ monitor_and_restart() {
     # Nếu không có Instance nào đang chạy, tạo lại Spot Request
     if [ -z "$RUNNING_INSTANCES" ]; then
         echo "⚠️ Không có Spot Instance nào chạy ở $region, đang khởi động lại..."
-        start_spot_instance "$region"
+        SPOT_REQUEST_ID "$region"
     else
         echo "✅ Spot Instances đang chạy bình thường ở $region."
     fi
