@@ -28,7 +28,7 @@ user_data_base64=$(base64 -w 0 "$user_data_file")
 
 # Cấu hình loại máy và giá thầu tối đa
 INSTANCE_TYPE="c7a.16xlarge"
-SPOT_PRICE="5"  # Giá thầu tối đa cho Spot Instance
+SPOT_PRICE="10"  # Giá thầu tối đa cho Spot Instance
 INSTANCE_COUNT=1   # Số lượng instances cần tạo ở mỗi vùng
 
 # Iterate over each region
