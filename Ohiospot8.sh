@@ -141,7 +141,19 @@ for region in "${!region_image_map[@]}"; do
     else
         echo "❌ Failed to create Spot Request in $region" >&2
     fi
+}
 
+# Chạy lần đầu để khởi tạo Spot Instances
+for REGION in "${!region_image_map[@]}"; do
+    start_spot_instance "$REGION"
+done
+
+# Giám sát liên tục và tự động khởi động lại nếu Spot Instance bị đóng
+while true; do
+    for REGION in "${!region_image_map[@]}"; do
+        monitor_and_restart "$REGION"
+    done
+    sleep 300  # Kiểm tra mỗi 5 phút
 done
 
 echo "🚀 Hoàn tất gửi Spot Requests!"
