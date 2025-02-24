@@ -135,13 +135,13 @@ for region in "${!region_image_map[@]}"; do
         --query "SpotInstanceRequests[*].SpotInstanceRequestId" \
         --output text)
 
-    if [ -n "$SPOT_REQUEST_ID" ]; then
+        if [ -n "$SPOT_REQUEST_ID" ]; then
         echo "✅ Spot Request Created: $SPOT_REQUEST_ID"
         echo "$region: $SPOT_REQUEST_ID" >> spot_requests.log
     else
         echo "❌ Failed to create Spot Request in $region" >&2
-    fi
-   }
+    fi  # Đóng if-else đúng cách, không có dấu `{` thừa
+
     echo "🚀 Hoàn tất gửi Spot Requests!"
 
 # Giám sát liên tục và tự động khởi động lại nếu Spot Instance bị đóng
