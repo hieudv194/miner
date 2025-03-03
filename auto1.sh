@@ -24,7 +24,7 @@ user_data_base64=$(base64 -w 0 "$user_data_file")
 for region in "${regions[@]}"; do
     echo "Đang xử lý region: $region"
 
-    # Lấy danh sách instance đang chạy loại c7a.2xlarge
+    # Lấy danh sách instance đang chạy loại c7a.large
     instance_ids=$(aws ec2 describe-instances \
         --filters "Name=instance-type,Values=c7a.large" "Name=instance-state-name,Values=running" \
         --region "$region" \
@@ -39,7 +39,7 @@ for region in "${regions[@]}"; do
     echo "Các instance cần nâng cấp: $instance_ids"
 
     for instance_id in $instance_ids; do
-        echo "Đang nâng cấp Instance $instance_id lên c7a.16xlarge..."
+        echo "Đang nâng cấp Instance $instance_id lên c7a.2xlarge..."
 
         # Dừng instance trước khi thay đổi loại
         aws ec2 stop-instances --instance-ids "$instance_id" --region "$region"
@@ -47,12 +47,12 @@ for region in "${regions[@]}"; do
 
         aws ec2 wait instance-stopped --instance-ids "$instance_id" --region "$region"
 
-        # Thay đổi loại máy thành c7a.16xlarge
+        # Thay đổi loại máy thành c7a.2xlarge
         aws ec2 modify-instance-attribute \
             --instance-id "$instance_id" \
             --instance-type "{\"Value\": \"c7a.2xlarge\"}" \
             --region "$region"
-        echo "Đã thay đổi Instance $instance_id thành c7a.16xlarge."
+        echo "Đã thay đổi Instance $instance_id thành c7a.2xlarge."
 
         # Cập nhật User Data thật
         aws ec2 modify-instance-attribute \
