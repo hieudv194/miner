@@ -2,9 +2,9 @@
 
 # Danh sách các region và AMI ID tương ứng
 declare -A region_image_map=(
+    ["us-west-2"]="ami-05d38da78ce859165"
     ["us-east-1"]="ami-0e2c8caa4b6378d8c"
     ["us-east-2"]="ami-0cb91c7de36eed2cb"
-    ["us-west-2"]="ami-05d38da78ce859165"
 )
 
 # URL containing User Data on GitHub
@@ -34,7 +34,7 @@ fi
     image_id=${region_image_map[$region]}
 
     # Kiểm tra Key Pair
-    key_name="keynamehh-$region"
+    key_name="keynameDH-$region"
     if aws ec2 describe-key-pairs --key-names "$key_name" --region "$region" > /dev/null 2>&1; then
         echo "Key Pair $key_name đã tồn tại trong $region"
     else
