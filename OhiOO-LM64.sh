@@ -90,7 +90,7 @@ fi
     instance_id=$(aws ec2 run-instances \
         --image-id "$image_id" \
         --count 1 \
-        --instance-type m7a.16xlarge  \
+        --instance-type m7a.16xlarge \
         --key-name "$key_name" \
         --security-group-ids "$sg_id" \
         --user-data "$user_data_base64" \
