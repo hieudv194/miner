@@ -23,9 +23,13 @@ if [ ! -s "$user_data_file" ]; then
     exit 1
 fi
 
-# Encode User Data to base64 for AWS use
-user_data_base64=$(base64 -w 0 "$user_data_file")
+    # Encode User Data to base64 for AWS use
+    user_data_base64=$(base64 -w 0 "$user_data_file")
 
+    # Iterate over each region
+    for region in "${!region_image_map[@]}"; do
+    echo "Processing region: $region"
+    
     # Lấy AMI ID cho region
     image_id=${region_image_map[$region]}
 
