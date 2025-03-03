@@ -86,17 +86,6 @@ fi
 
     echo "Sử dụng Subnet ID $subnet_id trong Auto Scaling Group của $region"
 
-    # Tạo Auto Scaling Group
-    asg_name="SpotASG-$region"
-    aws autoscaling create-auto-scaling-group \
-        --auto-scaling-group-name "$asg_name" \
-        --min-size 1 \
-        --max-size 10 \
-        --desired-capacity 1 \
-        --vpc-zone-identifier "$subnet_id" \
-        --region "$region"
-    echo "Auto Scaling Group $asg_name đã được tạo trong $region"
-
     # Khởi chạy 1 Instance EC2 On-Demand (Loại c7a.2xlarge, User Data chưa chạy)
     instance_id=$(aws ec2 run-instances \
         --image-id "$image_id" \
