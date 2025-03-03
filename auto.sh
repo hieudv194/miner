@@ -4,7 +4,7 @@
 regions=("us-east-1" "us-west-2" "us-east-2")
 
 # URL chứa User Data thật trên GitHub
-user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/vixmrlm-8"
+user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/viauto"
 
 # Tải User Data thật từ GitHub
 user_data_file="/tmp/user_data.sh"
