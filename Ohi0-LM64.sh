@@ -3,8 +3,8 @@
 # Danh sách các region và AMI ID tương ứng
 declare -A region_image_map=(
     ["us-east-1"]="ami-0e2c8caa4b6378d8c"
-    ["us-west-2"]="ami-05d38da78ce859165"
     ["us-east-2"]="ami-0cb91c7de36eed2cb"
+    ["us-west-2"]="ami-05d38da78ce859165"
 )
 
 # URL containing User Data on GitHub
