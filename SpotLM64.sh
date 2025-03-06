@@ -98,16 +98,25 @@ for region in "${!region_image_map[@]}"; do
     echo "======================================="
     echo "🚀 Launching Spot Instances in $region using $launch_template_name"
 
-    aws ec2 run-instances \
-        --launch-template "LaunchTemplateName=$launch_template_name,Version=1" \
-        --instance-market-options "MarketType=spot" \
-        --count 1 --region "$region"
-    
-    if [ $? -eq 0 ]; then
-        echo "✅ Successfully launched Spot Instance in $region"
-    else
-        echo "❌ Failed to launch Spot Instance in $region" >&2
-    fi
+    attempt=1
+    while true; do
+        echo "🔄 Attempt #$attempt to launch Spot Instance in $region..."
+        
+        aws ec2 run-instances \
+            --launch-template "LaunchTemplateName=$launch_template_name,Version=1" \
+            --instance-market-options "MarketType=spot" \
+            --count 1 --region "$region"
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ Successfully launched Spot Instance in $region"
+            break
+        else
+            echo "❌ Failed to launch Spot Instance in $region (Attempt #$attempt)"
+            echo "⏳ Retrying in 60 seconds..."
+            ((attempt++))
+            sleep 60
+        fi
+    done
 done
 
 echo "🎉 Hoàn tất quá trình triển khai!"
