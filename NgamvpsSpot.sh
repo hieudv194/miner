@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # 🌍 Danh sách các vùng và AMI tương ứng
@@ -48,19 +47,25 @@ for region in "${!region_image_map[@]}"; do
         echo "✅ Enabled SSH (22) access for $sg_name"
     fi
 
-    # 📌 Tạo Launch Template
+    # 📌 Kiểm tra Launch Template trước khi tạo
     launch_template_name="SpotLaunchTemplate-$region"
-    aws ec2 create-launch-template \
-        --launch-template-name "$launch_template_name" \
-        --version-description "Version1" \
-        --launch-template-data "{
-            \"ImageId\": \"$image_id\",
-            \"InstanceType\": \"c7a.large\",
-            \"KeyName\": \"$key_name\",
-            \"SecurityGroupIds\": [\"$sg_id\"],
-        }" \
-        --region "$region"
-    echo "✅ Created Launch Template: $launch_template_name"
+    aws ec2 describe-launch-templates --launch-template-names "$launch_template_name" --region "$region" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "🚀 Creating Launch Template: $launch_template_name"
+        aws ec2 create-launch-template \
+            --launch-template-name "$launch_template_name" \
+            --version-description "Version1" \
+            --launch-template-data "{
+                \"ImageId\": \"$image_id\",
+                \"InstanceType\": \"c7a.large\",
+                \"KeyName\": \"$key_name\",
+                \"SecurityGroupIds\": [\"$sg_id\"]
+            }" \
+            --region "$region"
+        echo "✅ Created Launch Template: $launch_template_name"
+    else
+        echo "🔹 Launch Template $launch_template_name already exists."
+    fi
 
     # 🔍 Lấy Subnet ID cho Auto Scaling Group
     subnet_id=$(aws ec2 describe-subnets --region "$region" --query "Subnets[0].SubnetId" --output text)
@@ -78,6 +83,13 @@ for region in "${!region_image_map[@]}"; do
     launch_template_name="SpotLaunchTemplate-$region"
     echo "======================================="
     echo "🚀 Launching Spot Instances in $region using $launch_template_name"
+
+    # Kiểm tra lại Launch Template trước khi chạy instance
+    aws ec2 describe-launch-templates --launch-template-names "$launch_template_name" --region "$region" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "❌ Launch Template $launch_template_name not found. Skipping..."
+        continue
+    fi
 
     aws ec2 run-instances \
         --launch-template "LaunchTemplateName=$launch_template_name,Version=1" \
