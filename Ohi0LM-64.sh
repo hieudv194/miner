@@ -8,7 +8,7 @@ declare -A region_image_map=(
 )
 
 # URL containing User Data on GitHub
-user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/vixmrlm-64"
+user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/Duol"
 
 # Path to User Data file
 user_data_file="/tmp/user_data.sh"
