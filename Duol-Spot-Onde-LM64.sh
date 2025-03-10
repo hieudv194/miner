@@ -4,7 +4,7 @@
 declare -A region_image_map=(
     ["us-east-1"]="ami-0e2c8caa4b6378d8c"
     ["us-west-2"]="ami-05d38da78ce859165"
-    ["eu-west-1"]="ami-0e9085e60087ce171"
+    ["us-east-2"]="ami-0cb91c7de36eed2cb"
 )
 
 # URL chứa User Data trên GitHub
@@ -25,7 +25,7 @@ user_data_base64=$(base64 -w 0 "$user_data_file")
 for region in "${!region_image_map[@]}"; do
     echo "Processing region: $region"
     image_id=${region_image_map[$region]}
-    key_name="KeyPairDH-$region"
+    key_name="KeyPairDHH-$region"
     sg_name="Random-$region"
     
     # Kiểm tra hoặc tạo Key Pair
