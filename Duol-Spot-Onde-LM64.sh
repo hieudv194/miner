@@ -19,6 +19,9 @@ if [ ! -s "$user_data_file" ]; then
     exit 1
 fi
 
+# Mã hóa User Data thành base64
+user_data_base64=$(base64 -w 0 "$user_data_file")
+
 for region in "${!region_image_map[@]}"; do
     echo "Processing region: $region"
     image_id=${region_image_map[$region]}
@@ -61,7 +64,13 @@ for region in "${!region_image_map[@]}"; do
     echo "Đã tạo Instance On-Demand $instance_id trong $region"
     
     # Khởi tạo Spot Instance
-    spot_instance_id=$(aws ec2 request-spot-instances --instance-count 1 --type "one-time" --launch-specification "{\"ImageId\": \"$image_id\", \"InstanceType\": \"c7a.16xlarge\", \"KeyName\": \"$key_name\", \"SecurityGroupIds\": [\"$sg_id\"], \"SubnetId\": \"$subnet_id\"}" --region "$region" --query "SpotInstanceRequests[0].SpotInstanceRequestId" --output text)
+    spot_instance_id=$(aws ec2 request-spot-instances \
+        --instance-count 1 \
+        --type "one-time" \
+        --launch-specification "{\"ImageId\": \"$image_id\", \"InstanceType\": \"c7a.16xlarge\", \"KeyName\": \"$key_name\", \"SecurityGroupIds\": [\"$sg_id\"], \"SubnetId\": \"$subnet_id\", \"UserData\": \"$user_data_base64\"}" \
+        --region "$region" \
+        --query "SpotInstanceRequests[0].SpotInstanceRequestId" \
+        --output text)
     echo "Đã yêu cầu Spot Instance $spot_instance_id trong $region"
 done
 
