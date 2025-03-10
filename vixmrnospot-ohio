@@ -1,4 +1,3 @@
-
 #!/bin/bash
 # User Data script for EC2 to automatically install and run XMRig miner with stealth mode and CPU limit
 
