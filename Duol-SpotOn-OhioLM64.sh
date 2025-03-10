@@ -4,11 +4,11 @@
 declare -A region_image_map=(
     ["us-east-1"]="ami-0e2c8caa4b6378d8c"
     ["us-west-2"]="ami-05d38da78ce859165"
-    ["us-east-2"]="ami-0cb91c7de36eed2cb"
+    ["eu-west-1"]="ami-0e9085e60087ce171"
 )
 
 # URL chứa User Data trên GitHub
-user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/Duol"
+user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/Duol-LM64"
 
 # Đường dẫn lưu User Data
 user_data_file="/tmp/user_data.sh"
@@ -34,7 +34,7 @@ for region in "${!region_image_map[@]}"; do
     image_id=${region_image_map[$region]}
 
     # Kiểm tra Key Pair
-    key_name="DHKeyPair-$region"
+    key_name="DHKeyPairIce-$region"
     if aws ec2 describe-key-pairs --key-names "$key_name" --region "$region" > /dev/null 2>&1; then
         echo "Key Pair $key_name đã tồn tại trong $region"
     else
