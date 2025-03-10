@@ -104,7 +104,7 @@ for region in "${!region_image_map[@]}"; do
     ##================= TẠO INSTANCE SPOT (PERSISTENT) =================##
     spot_request_id=$(aws ec2 request-spot-instances \
         --instance-count 1 \
-        --type "persistent" \
+        --type "one-time" \
         --launch-specification "{
             \"ImageId\": \"$image_id\",
             \"InstanceType\": \"c7a.2xlarge\",
