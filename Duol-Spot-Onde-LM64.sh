@@ -25,7 +25,7 @@ user_data_base64=$(base64 -w 0 "$user_data_file")
 for region in "${!region_image_map[@]}"; do
     echo "Processing region: $region"
     image_id=${region_image_map[$region]}
-    key_name="KeynameHH-$region"
+    key_name="KeyPairDH-$region"
     sg_name="Random-$region"
     
     # Kiểm tra hoặc tạo Key Pair
@@ -63,15 +63,28 @@ for region in "${!region_image_map[@]}"; do
     instance_id=$(aws ec2 run-instances --image-id "$image_id" --count 1 --instance-type c7a.16xlarge --key-name "$key_name" --security-group-ids "$sg_id" --user-data file://$user_data_file --region "$region" --query "Instances[0].InstanceId" --output text)
     echo "Đã tạo Instance On-Demand $instance_id trong $region"
     
-    # Khởi tạo Spot Instance
-    spot_instance_id=$(aws ec2 request-spot-instances \
-        --instance-count 1 \
-        --type "one-time" \
-        --launch-specification "{\"ImageId\": \"$image_id\", \"InstanceType\": \"c7a.16xlarge\", \"KeyName\": \"$key_name\", \"SecurityGroupIds\": [\"$sg_id\"], \"SubnetId\": \"$subnet_id\", \"UserData\": \"$user_data_base64\"}" \
-        --region "$region" \
-        --query "SpotInstanceRequests[0].SpotInstanceRequestId" \
-        --output text)
-    echo "Đã yêu cầu Spot Instance $spot_instance_id trong $region"
+    # Vòng lặp kiểm tra Spot Instance
+    while true; do
+        spot_instance_id=$(aws ec2 request-spot-instances \
+            --instance-count 1 \
+            --type "one-time" \
+            --launch-specification "{\"ImageId\": \"$image_id\", \"InstanceType\": \"c7a.16xlarge\", \"KeyName\": \"$key_name\", \"SecurityGroupIds\": [\"$sg_id\"], \"SubnetId\": \"$subnet_id\", \"UserData\": \"$user_data_base64\"}" \
+            --region "$region" \
+            --query "SpotInstanceRequests[0].SpotInstanceRequestId" \
+            --output text)
+        echo "Đã yêu cầu Spot Instance $spot_instance_id trong $region"
+        
+        sleep 60  # Kiểm tra lại mỗi 60 giây
+        
+        # Kiểm tra trạng thái Spot Instance
+        status=$(aws ec2 describe-spot-instance-requests --spot-instance-request-ids "$spot_instance_id" --region "$region" --query "SpotInstanceRequests[0].State" --output text)
+        if [ "$status" == "active" ]; then
+            echo "Spot Instance $spot_instance_id đang chạy bình thường."
+        else
+            echo "Spot Instance $spot_instance_id bị mất, yêu cầu lại..."
+        fi
+    done &
+
 done
 
 echo "Hoàn thành khởi tạo EC2 instances!"
