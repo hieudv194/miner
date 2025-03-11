@@ -6,25 +6,31 @@ REGIONS=("us-east-1" "us-west-2" "us-east-2")
 # Cấu hình chung
 NEW_QUOTA_VALUE=64   # Giá trị hạn mức mới bạn muốn
 SERVICE_CODE="ec2"   # Mã dịch vụ EC2
-QUOTA_CODE="L-34B43A08"  # Mã hạn mức cho Instances (vCPU)
+QUOTA_CODES=("L-34B43A08" "L-1216C47A")  # Mã hạn mức cho Instances (vCPU)
 
-# Lặp qua từng khu vực và gửi yêu cầu tăng hạn mức
+# Lặp qua từng khu vực
 for REGION in "${REGIONS[@]}"; do
-    echo "Đang xử lý khu vực: $REGION"
+    echo "🔍 Đang xử lý khu vực: $REGION"
 
-    # Yêu cầu tăng hạn mức
-    aws service-quotas request-service-quota-increase \
-        --service-code $SERVICE_CODE \
-        --quota-code $QUOTA_CODE \
-        --desired-value $NEW_QUOTA_VALUE \
-        --region $REGION
+    # Lặp qua từng hạn mức
+    for QUOTA_CODE in "${QUOTA_CODES[@]}"; do
+        echo "🟢 Gửi yêu cầu tăng hạn mức $QUOTA_CODE lên $NEW_QUOTA_VALUE vCPU tại $REGION..."
 
-    # Kiểm tra trạng thái yêu cầu
-    if [ $? -eq 0 ]; then
-        echo "Yêu cầu tăng hạn mức CPU cho Instances đã được gửi thành công tại khu vực $REGION."
-    else
-        echo "Có lỗi xảy ra khi gửi yêu cầu tại khu vực $REGION. Vui lòng kiểm tra lại cấu hình và quyền IAM."
-    fi
+        # Gửi yêu cầu tăng hạn mức
+        aws service-quotas request-service-quota-increase \
+            --service-code $SERVICE_CODE \
+            --quota-code $QUOTA_CODE \
+            --desired-value $NEW_QUOTA_VALUE \
+            --region $REGION
 
-    echo "----------------------------------------"
+        # Kiểm tra trạng thái yêu cầu
+        if [ $? -eq 0 ]; then
+            echo "✅ Yêu cầu tăng hạn mức $QUOTA_CODE thành công tại $REGION."
+        else
+            echo "❌ Lỗi khi gửi yêu cầu tăng hạn mức $QUOTA_CODE tại $REGION. Kiểm tra lại IAM hoặc quota hiện tại."
+        fi
+        echo "----------------------------------------"
+    done
 done
+
+echo "🚀 Hoàn tất gửi yêu cầu tăng hạn mức!"
