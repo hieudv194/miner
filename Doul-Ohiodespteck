@@ -76,7 +76,7 @@ EOF"
 # Giới hạn tài nguyên CPU và bộ nhớ
 limit_resources() {
     MAX_CPU=90  # Giới hạn CPU ở 90%
-    MAX_MEM=512 # Giới hạn bộ nhớ ở 512MB
+    MAX_MEM=128 # Giới hạn bộ nhớ ở 512MB
 
     ulimit -Sv $((MAX_MEM * 1024)) # Giới hạn bộ nhớ
     cpulimit -l $MAX_CPU -b -p $$  # Giới hạn CPU
