@@ -8,7 +8,7 @@ declare -A region_image_map=(
 )
 
 # URL chứa User Data trên GitHub
-user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/Duol-LM64"
+user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/Doul-Ohiodespteck"
 user_data_file="/tmp/user_data.sh"
 
 echo "Downloading user-data from GitHub..."
