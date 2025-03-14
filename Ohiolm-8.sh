@@ -8,7 +8,7 @@ declare -A region_image_map=(
 )
 
 # URL containing User Data on GitHub
-user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/Duol-OhioLM8"
+user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/vixmrlm-8"
 
 # Path to User Data file
 user_data_file="/tmp/user_data.sh"
@@ -34,7 +34,7 @@ for region in "${!region_image_map[@]}"; do
     image_id=${region_image_map[$region]}
 
     # Check if Key Pair exists
-    key_name="keyname01-$region"
+    key_name="lm8keyname-$region"
     if aws ec2 describe-key-pairs --key-names "$key_name" --region "$region" > /dev/null 2>&1; then
         echo "Key Pair $key_name already exists in $region"
     else
