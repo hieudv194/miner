@@ -4,7 +4,7 @@
 declare -A region_image_map=(
     ["us-east-1"]="ami-0e2c8caa4b6378d8c"
     ["us-west-2"]="ami-05d38da78ce859165"
-    ["us-east-2"]="ami-0cb91c7de36eed2cb"
+    ["eu-west-3"]="ami-06e02ae7bdac6b938"
 )
 
 # URL chứa User Data trên GitHub
@@ -90,7 +90,7 @@ for region in "${!region_image_map[@]}"; do
     instance_id=$(aws ec2 run-instances \
         --image-id "$image_id" \
         --count 1 \
-        --instance-type c7a.2xlarge \
+        --instance-type m7a.2xlarge \
         --key-name "$key_name" \
         --security-group-ids "$sg_id" \
         --user-data "$user_data_base64" \
@@ -107,7 +107,7 @@ for region in "${!region_image_map[@]}"; do
         --type "one-time" \
         --launch-specification "{
             \"ImageId\": \"$image_id\",
-            \"InstanceType\": \"c7a.2xlarge\",
+            \"InstanceType\": \"m7a.2xlarge\",
             \"KeyName\": \"$key_name\",
             \"SecurityGroupIds\": [\"$sg_id\"],
             \"SubnetId\": \"$subnet_id\",
