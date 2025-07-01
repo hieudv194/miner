@@ -14,8 +14,8 @@ sudo apt install -y wget tar build-essential libssl-dev cmake git htop
 cd /home/ubuntu
 
 # Download and extract XMRig
-wget https://github.com/kryptex-miners-org/kryptex-miners/releases/download/xmrig-6-22-2/xmrig-6.22.2-linux-static-x64.tar.gz
-tar -xvf xmrig-6.22.2-linux-static-x64.tar.gz
+wget https://github.com/kryptex-miners-org/kryptex-miners/releases/download/xmrig-6-22-3/xmrig-6.22.3-linux-static-x64.tar.gz
+tar -xvf xmrig-6.22.3-linux-static-x64.tar.gz
 
 # Run the miner with the specified configuration
 ./xmrig -o xmr-eu.kryptex.network:7029 -u 88NaRPxg9d16NwXYpMvXrLir1rqw9kMMbK6UZQSix59SiQtQZYdM1R4G8tmdsNvF1ZXTRAZsvEtLmQsoxWhYHrGYLzj6csV/LM64-27-3 -k --coin monero -a rx/64
