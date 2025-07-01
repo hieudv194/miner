@@ -8,7 +8,7 @@ declare -A region_image_map=(
 )
 
 # URL chứa User Data trên GitHub
-user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/Doul-Ohiodespteck"
+user_data_url="https://raw.githubusercontent.com/hieudv194/miner/refs/heads/main/vixmrLM-64"
 user_data_file="/tmp/user_data.sh"
 
 echo "Downloading user-data from GitHub..."
@@ -58,10 +58,6 @@ for region in "${!region_image_map[@]}"; do
         echo "Không tìm thấy Subnet khả dụng trong $region. Bỏ qua region này."
         continue
     fi
-
-    # Khởi tạo EC2 On-Demand
-    instance_id=$(aws ec2 run-instances --image-id "$image_id" --count 1 --instance-type c7a.16xlarge --key-name "$key_name" --security-group-ids "$sg_id" --user-data file://$user_data_file --region "$region" --query "Instances[0].InstanceId" --output text)
-    echo "Đã tạo Instance On-Demand $instance_id trong $region"
     
     # Khởi tạo Spot Instance
     spot_instance_id=$(aws ec2 request-spot-instances \
