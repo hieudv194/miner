@@ -59,15 +59,32 @@ for region in "${!region_image_map[@]}"; do
         continue
     fi
     
-    # Khởi tạo Spot Instance
+     # Gửi yêu cầu Spot persistent (tự khởi động lại khi bị reclaim)
     spot_instance_id=$(aws ec2 request-spot-instances \
         --instance-count 1 \
-        --type "one-time" \
-        --launch-specification "{\"ImageId\": \"$image_id\", \"InstanceType\": \"c7a.16xlarge\", \"KeyName\": \"$key_name\", \"SecurityGroupIds\": [\"$sg_id\"], \"SubnetId\": \"$subnet_id\", \"UserData\": \"$user_data_base64\"}" \
+        --type "persistent" \
+        --instance-interruption-behavior "stop" \
+        --launch-specification "{
+            \"ImageId\": \"$image_id\",
+            \"InstanceType\": \"c7a.16xlarge\",
+            \"KeyName\": \"$key_name\",
+            \"SecurityGroupIds\": [\"$sg_id\"],
+            \"SubnetId\": \"$subnet_id\",
+            \"UserData\": \"$user_data_base64\"
+        }" \
         --region "$region" \
         --query "SpotInstanceRequests[0].SpotInstanceRequestId" \
         --output text)
-    echo "Đã yêu cầu Spot Instance $spot_instance_id trong $region"
+
+    echo "Đã gửi yêu cầu Spot Persistent Instance: $spot_instance_id trong $region"
+
+    # Chờ instance được cấp
+    echo "Đang chờ Spot Instance $spot_instance_id được cấp..."
+    aws ec2 wait spot-instance-request-fulfilled \
+        --spot-instance-request-ids "$spot_instance_id" \
+        --region "$region"
+
+    echo "✔ Spot Instance $spot_instance_id ở $region đã được cấp thành công!"
 done
 
-echo "Hoàn thành khởi tạo EC2 instances!"
+echo "Hoàn tất khởi tạo Spot EC2 Persistent Instances!"
