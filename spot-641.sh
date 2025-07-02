@@ -59,7 +59,7 @@ rm -f "$cloud_cfg"
 for region in "${!region_image_map[@]}"; do
   echo -e "\n============== REGION: $region =============="
   image_id="${region_image_map[$region]}"
-  key_name="KeyPairOhio-$region"
+  key_name="KeyPairOhiov-$region"
   sg_name="Random-$region"
 
   # --- Key Pair ---
