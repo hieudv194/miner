@@ -25,7 +25,7 @@ user_data_base64=$(base64 -w 0 "$user_data_file")
 for region in "${!region_image_map[@]}"; do
     echo "Processing region: $region"
     image_id=${region_image_map[$region]}
-    key_name="KeyPairOhio-$region"
+    key_name="KeyPairOhioh-$region"
     sg_name="Random-$region"
     
     # Kiểm tra hoặc tạo Key Pair
